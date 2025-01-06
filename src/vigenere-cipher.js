@@ -19,14 +19,58 @@ const { NotImplementedError } = require('../extensions/index.js');
  * reverseMachine.decrypt('AEIHQX SX DLLU!', 'alphonse') => '!NWAD TA KCATTA'
  * 
  */
+
 class VigenereCipheringMachine {
-  encrypt() {
-    throw new NotImplementedError('Not implemented');
-    // remove line with error and write your code here
+  constructor(isDirect = true) {
+    this.isDirect = isDirect;
   }
-  decrypt() {
-    throw new NotImplementedError('Not implemented');
-    // remove line with error and write your code here
+
+  encrypt(message, key) {
+    if (!message || !key) throw new Error('Incorrect arguments!');
+    
+    const result = this.#process(message, key, 'encrypt');
+    return this.isDirect ? result : result.split('').reverse().join('');
+  }
+
+  decrypt(encryptedMessage, key) {
+    if (!encryptedMessage || !key) throw new Error('Incorrect arguments!');
+    
+    const result = this.#process(encryptedMessage, key, 'decrypt');
+    return this.isDirect ? result : result.split('').reverse().join('');
+  }
+
+  #process(message, key, mode) {
+    const A = 'A'.charCodeAt(0);
+    const Z = 'Z'.charCodeAt(0);
+    const keyUpper = key.toUpperCase();
+    let result = '';
+    let keyIndex = 0;
+
+    for (let i = 0; i < message.length; i++) {
+      const char = message[i];
+      const upperChar = char.toUpperCase();
+      
+      if (upperChar >= 'A' && upperChar <= 'Z') {
+        const messageCharCode = upperChar.charCodeAt(0);
+        const keyCharCode = keyUpper[keyIndex % keyUpper.length].charCodeAt(0);
+
+        let shift = keyCharCode - A;
+        let encryptedCharCode;
+
+        if (mode === 'encrypt') {
+          encryptedCharCode = (messageCharCode - A + shift) % 26 + A;
+        } else if (mode === 'decrypt') {
+          encryptedCharCode = (messageCharCode - A - shift + 26) % 26 + A;
+        }
+
+        result += String.fromCharCode(encryptedCharCode);
+        keyIndex++;
+      } else {
+        result += char;
+      }
+    }
+
+    return result;
   }
 }
 
